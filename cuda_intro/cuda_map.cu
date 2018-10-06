@@ -24,7 +24,7 @@ int main() {
     
     // Launch kernel
     int block_count = ceil((double)count / 1024);
-    _cuda_parallel_multiplication<<<block_count, 1024>>>(count, d_test_data, 5);
+    _cuda_parallel_multiplication<<<10, 1024>>>(count, d_test_data, 5);
     
     cudaDeviceSynchronize();
     cudaMemcpy(test_data, d_test_data, count * sizeof(int), cudaMemcpyDeviceToHost);
@@ -44,8 +44,12 @@ __global__ void _cuda_parallel_multiplication(int count, int* test_data, int mag
 
      int globalIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
-     if (globalIdx < count)
+     while (globalIdx < count) {
         test_data[globalIdx] = test_data[globalIdx] * magnitude;
+
+        globalIdx +=  blockDim.x * gridDim.x;
+        __syncthreads();
+     }
 
 }
 
